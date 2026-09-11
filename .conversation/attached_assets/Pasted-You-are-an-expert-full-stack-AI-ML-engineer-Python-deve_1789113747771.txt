@@ -1,0 +1,1432 @@
+You are an expert full-stack AI/ML engineer, Python developer, RAG engineer, LangGraph developer, healthcare software architect, and UI/UX designer.
+
+Build the complete **GRAM-AI** project from scratch according to the following specification.
+
+GRAM-AI stands for:
+
+**Agentic Clinical Decision Support System for Rural Community Health Workers Using RAG and Local LLMs**
+
+The system is intended to support ASHA/community health workers in rural India during patient assessment.
+
+IMPORTANT:
+
+* This is a clinical decision-support system, NOT a doctor replacement.
+* Never present the system as providing a definitive medical diagnosis.
+* Never fabricate medical information, datasets, evaluation metrics, citations, or clinical results.
+* Clinical safety must take priority over visual design.
+* The final architecture must support offline/local deployment using Ollama + Phi-3 Mini.
+* Replit may be used for development/demo, but the final system must be capable of running locally without cloud AI APIs.
+
+==================================================
+
+1. TECHNOLOGY STACK
+   ==================================================
+
+Backend:
+
+* Python 3.10+
+* FastAPI
+* Uvicorn
+* Pydantic
+
+Agentic AI:
+
+* LangGraph
+* LangChain only where genuinely required
+
+Local LLM:
+
+* Ollama
+* Phi-3 Mini
+* No OpenAI
+* No Gemini
+* No Claude
+* No Groq
+* No external/cloud medical APIs
+
+RAG:
+
+* ChromaDB
+* sentence-transformers
+* all-MiniLM-L6-v2 or another lightweight local embedding model
+* PyMuPDF
+
+Machine Learning:
+
+* scikit-learn
+* Random Forest
+* pandas
+* NumPy
+
+Frontend:
+
+* Streamlit
+
+PDF:
+
+* ReportLab
+
+Testing:
+
+* pytest
+
+Utilities:
+
+* python-dotenv
+* logging
+* pathlib
+* JSON
+* CSV
+
+Do NOT introduce React, Node.js, MongoDB, Firebase, PostgreSQL, or other unnecessary technologies.
+
+==================================================
+2. CORE SYSTEM ARCHITECTURE
+===========================
+
+Implement this LangGraph pipeline:
+
+User/ASHA Worker
+↓
+Intake Agent
+↓
+Clarification Agent
+↓
+RAG Retrieval
+↓
+Diagnosis Agent
+↓
+Decision/Referral Node
+↓
+Results + Referral PDF
+
+The five main nodes are:
+
+1. Intake Agent
+2. Clarification Agent
+3. RAG Retrieval
+4. Diagnosis Agent
+5. Decision/Referral Node
+
+Red-flag detection must operate as an independent deterministic safety layer.
+
+==================================================
+3. INTAKE AGENT
+===============
+
+Collect:
+
+* Patient ID
+* Patient name or initials where appropriate
+* Age
+* Sex
+* Chief complaint
+* Symptoms
+* Duration
+* Relevant history
+* Location/body area
+* Other clinically relevant information
+
+The interface must not overwhelm the ASHA worker.
+
+Use:
+
+* Large labels
+* Simple forms
+* Dropdowns/radio buttons where appropriate
+* Checkboxes for common symptoms
+* Text input for additional information
+
+Validate required fields.
+
+Age must be validated.
+
+Do not allow obviously invalid values such as negative age.
+
+==================================================
+4. CLARIFICATION AGENT
+======================
+
+The clarification agent should generate targeted follow-up questions based on the information already provided.
+
+Questions should:
+
+* Be short
+* Be easy to understand
+* Avoid unnecessary medical jargon
+* Ask only relevant questions
+* Avoid asking the same question repeatedly
+* Support multi-turn interaction
+
+The LangGraph state must maintain:
+
+* Patient information
+* Initial symptoms
+* Clarification questions
+* Answers
+* Retrieved evidence
+* ML predictions
+* LLM reasoning
+* Red flags
+* Triage decision
+
+The UI should display one manageable group of questions rather than overwhelming the user with a huge form.
+
+==================================================
+5. RAG SYSTEM
+=============
+
+Knowledge base sources should be based on the project specification:
+
+* NHSRC ASHA training modules
+* WHO IMNCI protocols
+* Other approved project knowledge-base documents only when actually provided
+
+Pipeline:
+
+PDF
+↓
+PyMuPDF extraction
+↓
+Text cleaning
+↓
+Chunking
+↓
+Embeddings
+↓
+ChromaDB
+↓
+Similarity retrieval
+
+Each chunk must preserve metadata such as:
+
+* source
+* page
+* section
+* chunk_id
+
+Use approximately 200–500 token chunks with overlap, but make chunk size configurable.
+
+The system must show the retrieved evidence to the user.
+
+Example:
+
+Source:
+WHO IMNCI Protocol
+
+Page:
+42
+
+Section:
+Danger Signs
+
+Evidence:
+[short relevant retrieved passage]
+
+Do not invent page numbers or citations.
+
+==================================================
+6. RANDOM FOREST MODEL
+======================
+
+Implement the ML component using:
+
+* scikit-learn Random Forest
+* pandas
+* NumPy
+
+The project specification references approximately:
+
+* 4,920 samples
+* 41 disease classes
+* 132 binary symptom features
+
+IMPORTANT:
+
+Do NOT blindly assume these values.
+
+Inspect the actual dataset supplied to the project.
+
+Automatically report:
+
+* number of samples
+* number of features
+* number of classes
+* class distribution
+
+Implement:
+
+* preprocessing
+* train/test split
+* Random Forest training
+* prediction
+* probability/confidence
+* evaluation
+
+Evaluation must include:
+
+* Accuracy
+* Precision
+* Recall
+* F1-score
+* Confusion matrix
+* Classification report
+
+Never hard-code fake results.
+
+==================================================
+7. DIAGNOSIS AGENT
+==================
+
+The Diagnosis Agent should combine:
+
+A. Random Forest predictions
+
+AND
+
+B. RAG-grounded Phi-3 Mini reasoning
+
+The fusion mechanism must be transparent.
+
+Do not invent an arbitrary confidence score and present it as medically validated.
+
+If RF and LLM disagree:
+
+* Clearly represent the disagreement internally
+* Reduce confidence where appropriate
+* Prefer authoritative protocol evidence
+* Avoid overconfident conclusions
+
+Output should use wording such as:
+
+"Possible conditions considered"
+
+rather than:
+
+"You have X disease."
+
+Show:
+
+* Possible conditions
+* RF confidence/probability
+* Relevant protocol evidence
+* Reasoning summary
+* Uncertainty
+
+==================================================
+8. RED-FLAG SAFETY ENGINE
+=========================
+
+This is one of the most important components.
+
+Red-flag detection must be:
+
+* Deterministic
+* Rule-based
+* Independent of the LLM
+* Independent of Random Forest
+* Configurable
+
+Examples include:
+
+* Unable to drink/breastfeed
+* Convulsions
+* Lethargy
+* Unconsciousness
+* Very fast breathing
+* Severe dehydration
+* Age-specific danger signs
+
+Store rules in a configuration file where possible.
+
+If a red flag is detected:
+
+NORMAL TRIAGE MUST NOT OVERRIDE IT.
+
+The system must clearly display an urgent warning.
+
+Example:
+
+⚠ URGENT REFERRAL
+
+Danger sign detected:
+Convulsions
+
+Recommended action:
+Immediate referral to an appropriate higher-level health facility.
+
+Do not make the interface frightening unnecessarily, but make emergency information impossible to miss.
+
+==================================================
+9. TRIAGE
+=========
+
+The final triage categories are:
+
+1. Manage Locally
+2. Routine Referral
+3. Urgent Referral
+
+The Decision/Referral Node determines the appropriate category using:
+
+* Red flags
+* Protocol evidence
+* Clinical information
+* System reasoning
+
+Red flags must have priority.
+
+==================================================
+10. REFERRAL PDF
+================
+
+Generate a printable referral note using ReportLab.
+
+Include:
+
+* Patient information
+* Age
+* Sex
+* Symptoms
+* Duration
+* Relevant history
+* Clarification answers
+* Possible conditions
+* Supporting protocol evidence
+* Detected red flags
+* Triage category
+* Reason for referral
+* Date/time
+* ASHA worker information
+* Disclaimer
+
+Make the PDF clean and suitable for printing.
+
+Do not claim that it is an official government medical form.
+
+==================================================
+11. REPLIT / LOCAL LLM COMPATIBILITY
+====================================
+
+Replit may not have Ollama running locally.
+
+Therefore create an abstraction:
+
+app/llm/
+base.py
+ollama_provider.py
+mock_provider.py
+
+The application must detect which provider is available.
+
+LOCAL MODE:
+Ollama + Phi-3 Mini
+
+DEMO MODE:
+Mock provider for Replit testing
+
+The UI must clearly display:
+
+"DEMO MODE — Ollama/Phi-3 Mini is not connected."
+
+Never pretend that the mock provider is Phi-3 Mini.
+
+The mock provider should only be used to test application flow.
+
+==================================================
+12. UI/UX — VERY IMPORTANT
+==========================
+
+The interface must be designed specifically for an ASHA/community health worker.
+
+DO NOT create a generic ChatGPT clone.
+
+DO NOT create a flashy AI dashboard.
+
+DO NOT overload the screen with cards, graphs, animations, gradients, or unnecessary elements.
+
+The UI should feel like a practical healthcare field tool.
+
+Design principles:
+
+* Simple
+* Clean
+* Trustworthy
+* Accessible
+* Mobile-friendly
+* Low cognitive load
+* Large readable text
+* Clear navigation
+* High contrast
+* Minimal scrolling where possible
+* Obvious actions
+* Plain language
+* Consistent layout
+
+==================================================
+13. VISUAL STYLE
+================
+
+Use a clean healthcare-inspired visual language.
+
+Preferred appearance:
+
+* Light background
+* Clean white content panels
+* Subtle borders
+* Soft shadows only where useful
+* One primary accent color
+* One warning color
+* One emergency color
+* Avoid excessive colors
+
+Do NOT use:
+
+* Neon colors
+* Glassmorphism
+* Excessive gradients
+* Futuristic AI graphics
+* Animated backgrounds
+* Excessive icons
+* Huge decorative illustrations
+* Cryptocurrency/startup-style dashboards
+
+The interface should look credible enough for a college major project demonstration.
+
+==================================================
+14. MAIN NAVIGATION
+===================
+
+Create a simple sidebar or top navigation.
+
+Main sections:
+
+🏠 Home
+
+🩺 New Assessment
+
+📋 Current Assessment
+
+📊 Results
+
+📄 Referral
+
+📚 Knowledge Base
+
+📈 Evaluation
+
+⚙ System Status
+
+The navigation must remain consistent.
+
+The user should always know:
+
+* Where they are
+* What step they are on
+* What to do next
+
+==================================================
+15. HOME SCREEN
+===============
+
+The Home screen should immediately explain what GRAM-AI does.
+
+Header:
+
+GRAM-AI
+
+Agentic Clinical Decision Support for Community Health Workers
+
+Short explanation:
+
+"GRAM-AI helps community health workers assess symptoms, retrieve relevant health protocols, identify danger signs, and support appropriate referral decisions."
+
+Add a clear disclaimer:
+
+"GRAM-AI is a decision-support tool and does not replace a qualified healthcare professional."
+
+Main action:
+
+[ Start New Assessment ]
+
+Secondary actions:
+
+[ View Previous Results ]
+
+[ System Status ]
+
+Keep the Home page simple.
+
+Do NOT fill it with statistics that are not actually measured.
+
+==================================================
+16. NEW ASSESSMENT UI
+=====================
+
+Create a step-based workflow.
+
+Example:
+
+STEP 1
+Patient Information
+
+STEP 2
+Symptoms
+
+STEP 3
+Clarification
+
+STEP 4
+Analysis
+
+STEP 5
+Decision
+
+STEP 6
+Referral
+
+Display the current step clearly.
+
+Example:
+
+Patient Information → Symptoms → Clarification → Analysis → Decision
+
+The current step should be visually highlighted.
+
+==================================================
+17. PATIENT INFORMATION SCREEN
+==============================
+
+Use a clean form.
+
+Fields:
+
+Patient ID
+Age
+Sex
+Chief Complaint
+
+Use:
+
+* Radio buttons
+* Select boxes
+* Simple text fields
+
+Avoid long paragraphs of instructions.
+
+Provide:
+
+[ Continue ]
+
+At the bottom.
+
+==================================================
+18. SYMPTOM SCREEN
+==================
+
+Provide common symptom selection using checkboxes.
+
+Example categories:
+
+General
+
+* Fever
+* Weakness
+* Fatigue
+
+Respiratory
+
+* Cough
+* Difficulty breathing
+* Fast breathing
+
+Gastrointestinal
+
+* Vomiting
+* Diarrhea
+* Abdominal pain
+
+Neurological
+
+* Convulsions
+* Unconsciousness
+* Severe headache
+
+Allow:
+
+[ Other symptoms ]
+
+Use a text field for symptoms not listed.
+
+Do not assume the list covers every possible symptom.
+
+==================================================
+19. CLARIFICATION SCREEN
+========================
+
+Show:
+
+"To understand the situation better, please answer these questions."
+
+Each question should be clearly separated.
+
+Example:
+
+Does the patient have difficulty breathing?
+
+○ Yes
+○ No
+○ Not sure
+
+Use large clickable controls.
+
+At the bottom:
+
+[ Submit Answers ]
+
+Show a progress indicator.
+
+==================================================
+20. ANALYSIS SCREEN
+===================
+
+While analysis is running, show understandable progress.
+
+Example:
+
+✓ Patient information collected
+
+✓ Symptoms analyzed
+
+✓ Safety checks completed
+
+● Retrieving relevant protocols
+
+○ Generating assessment
+
+Avoid fake loading animations.
+
+If processing takes time, explain what is happening.
+
+Do not expose raw Python errors to the ASHA worker.
+
+==================================================
+21. RESULTS SCREEN
+==================
+
+This screen is extremely important.
+
+Start with a clear triage result.
+
+Example:
+
+URGENT REFERRAL
+
+Then:
+
+"Reason"
+
+"Red flag detected: Very fast breathing"
+
+Then:
+
+"Possible conditions considered"
+
+* Condition A
+* Condition B
+* Condition C
+
+Then:
+
+"Supporting protocol evidence"
+
+Show source + page + section.
+
+Then:
+
+"Recommended next step"
+
+Keep the recommendation clear.
+
+Do not display a giant block of LLM-generated text.
+
+Use expandable sections where appropriate.
+
+==================================================
+22. RED-FLAG DISPLAY
+====================
+
+If there are no red flags:
+
+✓ No configured danger signs detected
+
+If there are red flags:
+
+⚠ DANGER SIGN DETECTED
+
+Use a highly visible warning panel.
+
+Show:
+
+* Exact detected sign
+* Why it matters
+* Recommended action
+
+Do not hide red flags inside an expandable section.
+
+==================================================
+23. CONFIDENCE DISPLAY
+======================
+
+Do NOT create misleading medical certainty.
+
+Instead of:
+
+"95% chance you have malaria"
+
+prefer:
+
+"Model-supported possibility"
+
+and show:
+
+Random Forest:
+Condition A — 0.72 model probability
+
+Protocol evidence:
+Relevant / partially relevant / not found
+
+Overall interpretation:
+Requires clinical assessment
+
+Clearly state that model scores are not medical certainty.
+
+==================================================
+24. RAG EVIDENCE UI
+===================
+
+Create an expandable section:
+
+"Why is the system suggesting this?"
+
+Inside show:
+
+Source
+Page
+Section
+Relevant evidence
+
+Example:
+
+WHO IMNCI
+Page 42
+Danger Signs
+
+[Retrieved evidence]
+
+The user should be able to understand where the recommendation came from.
+
+==================================================
+25. REFERRAL PAGE
+=================
+
+Provide:
+
+Referral status
+Reason
+Patient information
+Assessment summary
+
+Button:
+
+[ Generate Referral PDF ]
+
+After generation:
+
+[ Download Referral PDF ]
+
+Also provide:
+
+[ Start New Assessment ]
+
+==================================================
+26. KNOWLEDGE BASE PAGE
+=======================
+
+Show:
+
+Knowledge Base Status
+
+Documents indexed:
+XX
+
+Chunks:
+XX
+
+Embedding model:
+all-MiniLM-L6-v2
+
+Vector database:
+ChromaDB
+
+Last ingestion:
+date/time if actually available
+
+Show a list of indexed documents.
+
+Do not fabricate document counts.
+
+==================================================
+27. EVALUATION DASHBOARD
+========================
+
+Create an evaluation page for project demonstration.
+
+Show only actual measured values.
+
+Sections:
+
+Random Forest Evaluation
+
+* Accuracy
+* Precision
+* Recall
+* F1
+* Confusion Matrix
+
+RAG Evaluation
+
+* Retrieval relevance
+* Citation/source correctness
+* Faithfulness where an actual evaluation method exists
+
+Safety Evaluation
+
+* Red-flag sensitivity/recall
+
+System Evaluation
+
+* Response latency
+* Offline functionality
+
+Clearly label these as:
+
+"Measured Evaluation Results"
+
+If evaluation has not been run:
+
+"Evaluation not yet performed."
+
+Never display the project's target numbers as achieved results.
+
+The project design targets may be shown separately under:
+
+"Pre-implementation Targets"
+
+==================================================
+28. SYSTEM STATUS PAGE
+======================
+
+Display:
+
+Backend:
+● Connected / ● Disconnected
+
+LangGraph:
+● Available
+
+Ollama:
+● Connected / ● Not connected
+
+Phi-3 Mini:
+● Available / ● Not available
+
+ChromaDB:
+● Available
+
+Knowledge Base:
+● Loaded / ● Not loaded
+
+Random Forest:
+● Trained / ● Not trained
+
+Mode:
+
+LOCAL MODE
+
+or
+
+DEMO MODE
+
+This page is especially important for Replit development.
+
+==================================================
+29. ERROR HANDLING
+==================
+
+Never show technical stack traces to the end user.
+
+Instead show:
+
+"Something went wrong while processing this assessment."
+
+Provide a useful next action.
+
+Log technical errors in the backend.
+
+Use structured logging.
+
+==================================================
+30. ACCESSIBILITY
+=================
+
+The interface should support users who may have limited digital literacy.
+
+Requirements:
+
+* Large buttons
+* Readable font
+* Clear labels
+* High contrast
+* No tiny text
+* Avoid icon-only buttons
+* Avoid complicated menus
+* Use plain English
+* Avoid unexplained medical terminology
+* Consistent button placement
+
+Important actions should be obvious.
+
+==================================================
+31. RESPONSIVE DESIGN
+=====================
+
+The Streamlit interface should work reasonably on:
+
+* Laptop
+* Desktop
+* Tablet
+* Mobile browser
+
+Do not design only for a wide desktop screen.
+
+Forms should stack vertically on narrow screens.
+
+==================================================
+32. LANGUAGE-READY ARCHITECTURE
+===============================
+
+The current implementation may use English.
+
+However, structure the application so that future support for:
+
+* Hindi
+* Hinglish
+* Kannada
+
+can be added.
+
+Do not hard-code every user-facing string throughout the application.
+
+Use a centralized text/translation structure where practical.
+
+==================================================
+33. PROJECT STRUCTURE
+=====================
+
+Create:
+
+GRAM-AI/
+│
+├── app/
+│   ├── main.py
+│   ├── config.py
+│   │
+│   ├── api/
+│   │   ├── routes_assessment.py
+│   │   ├── routes_rag.py
+│   │   ├── routes_referral.py
+│   │   └── routes_system.py
+│   │
+│   ├── agents/
+│   │   ├── graph.py
+│   │   ├── state.py
+│   │   ├── intake_agent.py
+│   │   ├── clarification_agent.py
+│   │   ├── rag_agent.py
+│   │   ├── diagnosis_agent.py
+│   │   └── decision_agent.py
+│   │
+│   ├── rag/
+│   │   ├── ingest.py
+│   │   ├── chunking.py
+│   │   ├── embeddings.py
+│   │   ├── vector_store.py
+│   │   └── retriever.py
+│   │
+│   ├── ml/
+│   │   ├── train.py
+│   │   ├── predict.py
+│   │   ├── preprocess.py
+│   │   └── evaluate.py
+│   │
+│   ├── safety/
+│   │   ├── red_flag_detector.py
+│   │   ├── rules.py
+│   │   └── config.json
+│   │
+│   ├── fusion/
+│   │   └── rf_llm_fusion.py
+│   │
+│   ├── llm/
+│   │   ├── base.py
+│   │   ├── ollama_provider.py
+│   │   └── mock_provider.py
+│   │
+│   ├── referral/
+│   │   └── pdf_generator.py
+│   │
+│   └── utils/
+│       ├── logging.py
+│       └── validators.py
+│
+├── frontend/
+│   └── streamlit_app.py
+│
+├── data/
+│   ├── raw/
+│   ├── processed/
+│   ├── knowledge_base/
+│   └── models/
+│
+├── evaluation/
+│   ├── clinical_vignettes.json
+│   ├── evaluate_system.py
+│   └── results/
+│
+├── tests/
+│   ├── test_rag.py
+│   ├── test_red_flags.py
+│   ├── test_ml.py
+│   ├── test_fusion.py
+│   └── test_api.py
+│
+├── scripts/
+│   ├── ingest_documents.py
+│   ├── train_model.py
+│   └── run_evaluation.py
+│
+├── requirements.txt
+├── .env.example
+├── README.md
+└── run.bat
+
+==================================================
+34. FASTAPI ENDPOINTS
+=====================
+
+Implement:
+
+GET /health
+
+GET /system/status
+
+POST /assessment/start
+
+POST /assessment/intake
+
+POST /assessment/clarify
+
+POST /assessment/analyze
+
+POST /rag/retrieve
+
+POST /red-flags/check
+
+POST /referral/generate
+
+GET /evaluation/metrics
+
+Use Pydantic models for request/response validation.
+
+==================================================
+35. TESTING
+===========
+
+Write pytest tests for:
+
+* Intake validation
+* Age validation
+* Red-flag detection
+* RAG retrieval
+* ML prediction
+* Fusion logic
+* Referral generation
+* API endpoints
+
+Test emergency/red-flag cases separately.
+
+Do not claim tests pass unless they actually pass.
+
+==================================================
+36. EVALUATION
+==============
+
+Create independent clinical vignette evaluation.
+
+Do not train and evaluate on the same examples.
+
+Measure:
+
+Random Forest:
+
+* Accuracy
+* Precision
+* Recall
+* F1
+
+RAG:
+
+* Retrieval relevance
+* Citation correctness
+* Faithfulness where measurable
+
+Clinical system:
+
+* Top-1 performance where appropriate
+* Red-flag recall separately
+
+System:
+
+* Response latency
+* Offline functionality
+
+The project documentation contains planning targets, but these are NOT achieved results.
+
+Never present targets as actual results.
+
+==================================================
+37. SECURITY AND SAFETY
+=======================
+
+Implement:
+
+* Input validation
+* Safe error handling
+* No API keys hard-coded
+* Environment variables where needed
+* Logging without exposing sensitive patient data
+* Avoid storing patient information unnecessarily
+* Do not expose internal prompts
+* Do not expose backend stack traces
+* Do not allow arbitrary file paths from users
+* Validate uploaded knowledge-base files
+
+==================================================
+38. OFFLINE REQUIREMENT
+=======================
+
+The final architecture must be able to work without internet after all required models/documents are downloaded.
+
+Local components:
+
+Streamlit
+↓
+FastAPI
+↓
+LangGraph
+↓
+Ollama
+↓
+Phi-3 Mini
+
+Alongside:
+
+ChromaDB
+Local embeddings
+Random Forest
+Local PDF generation
+
+No cloud AI inference.
+
+==================================================
+39. README
+==========
+
+Create a complete README containing:
+
+1. Project overview
+2. Problem statement
+3. Architecture
+4. Technology stack
+5. Folder structure
+6. Installation
+7. Python environment setup
+8. Dependency installation
+9. Ollama installation
+10. Phi-3 Mini setup
+11. Knowledge-base ingestion
+12. ML model training
+13. Running FastAPI
+14. Running Streamlit
+15. Replit DEMO MODE explanation
+16. LOCAL MODE explanation
+17. Testing
+18. Evaluation
+19. Limitations
+20. Clinical safety disclaimer
+21. Future work
+
+==================================================
+40. DEVELOPMENT APPROACH
+========================
+
+DO NOT generate a fake-looking project with hundreds of empty files.
+
+Build working functionality incrementally.
+
+PHASE 1:
+Inspect the existing Replit repository.
+
+Tell me:
+
+* What files already exist
+* What dependencies exist
+* What needs to be created
+* What can be reused
+
+PHASE 2:
+Create project architecture.
+
+PHASE 3:
+Implement RAG.
+
+PHASE 4:
+Implement Random Forest.
+
+PHASE 5:
+Implement Ollama/Mock LLM provider.
+
+PHASE 6:
+Implement LangGraph.
+
+PHASE 7:
+Implement deterministic red-flag engine.
+
+PHASE 8:
+Implement transparent RF + LLM fusion.
+
+PHASE 9:
+Implement FastAPI.
+
+PHASE 10:
+Implement Streamlit UI.
+
+PHASE 11:
+Implement referral PDF.
+
+PHASE 12:
+Implement evaluation.
+
+PHASE 13:
+Implement tests.
+
+PHASE 14:
+Perform complete integration testing.
+
+==================================================
+41. UI QUALITY CHECK
+====================
+
+Before considering the project complete, inspect every Streamlit page.
+
+Verify:
+
+□ Navigation works
+
+□ Home page is clean
+
+□ New Assessment is easy to use
+
+□ Forms are not cluttered
+
+□ Questions are readable
+
+□ Emergency warnings are obvious
+
+□ Results are understandable
+
+□ RAG sources are visible
+
+□ Referral PDF works
+
+□ System status is visible
+
+□ Demo/Local mode is clearly identified
+
+□ Evaluation page does not show fabricated metrics
+
+□ No raw exceptions appear in the UI
+
+□ Mobile layout is reasonable
+
+□ Buttons have clear labels
+
+□ No unnecessary animations
+
+□ No fake statistics
+
+□ No fake medical claims
+
+□ No generic chatbot appearance
+
+==================================================
+42. IMPORTANT FINAL REQUIREMENT
+===============================
+
+The final product should look like a serious academic healthcare AI prototype designed for rural/community healthcare workers.
+
+It should demonstrate:
+
+* Agentic AI
+* LangGraph
+* RAG
+* Local LLM
+* Ollama
+* Phi-3 Mini
+* Random Forest
+* Deterministic safety rules
+* Clinical protocol retrieval
+* Triage
+* Referral generation
+* FastAPI
+* Streamlit
+* Offline capability
+
+The system must prioritize:
+
+SAFETY > CORRECTNESS > USABILITY > VISUAL APPEARANCE
+
+At the end, provide:
+
+1. Final folder structure
+2. Complete technology stack
+3. Commands to install everything
+4. Commands to run the application
+5. Replit DEMO MODE instructions
+6. Local Ollama/Phi-3 Mini instructions
+7. Knowledge-base ingestion command
+8. ML training command
+9. Evaluation command
+10. Test command
+11. End-to-end testing procedure
+12. Known limitations
+13. What still requires clinical/public-health expert validation
+
+START NOW.
+
+First inspect the existing Replit repository and report what already exists and what is missing.
+
+Do not blindly overwrite existing working files.
+
+Then implement the project incrementally and keep the application runnable after each major phase.
