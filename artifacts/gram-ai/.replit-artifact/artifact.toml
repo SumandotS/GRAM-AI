@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "GRAM-AI"
+description = "A safety-first clinical decision-support prototype for ASHA and community health workers. It guides structured assessments, surfaces protocol evidence, detects danger signs deterministically, and generates referral notes without presenting a diagnosis."
+version = "1.0.0"
+id = "artifacts/gram-ai"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19359
+
+[services.development]
+run = "pnpm --filter @workspace/gram-ai run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/gram-ai", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/gram-ai/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19359"
+BASE_PATH = "/"
