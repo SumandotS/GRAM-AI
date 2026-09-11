@@ -1,0 +1,1 @@
+- [Artifact preview builds](artifact-preview-builds.md) — Vite artifact builds require workflow-provided PORT and BASE_PATH; typecheck is the standalone check.
